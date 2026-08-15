@@ -1,9 +1,9 @@
 # Milestones
 
-1. Foundation: repository, tooling, configuration, documentation.
-2. Verification core: parsers, profiling, deterministic dimensions, AetheScore.
-3. Jobs and passports: asynchronous pipeline, evidence persistence, artifact adapters.
-4. Marketplace: API, web UI, seeded demo data, dataset detail pages.
-5. 0G and commerce: Storage adapter, Solidity contract, testnet registration and purchase.
-6. Access and agents: access grants, agent API, OpenAPI, end-to-end demo.
-7. Submission hardening: mainnet proof, video, README, architecture evidence, X post.
+1. **Completed:** foundation, deterministic verification, AetheScore, Data Passport, local artifact boundary, in-memory lifecycle, API contract, synthetic marketplace UI, and local seller upload/verification vertical slice.
+2. **Next:** PostgreSQL repository, durable queue, streaming uploads, and deployed agent API.
+3. **Next:** wire marketplace/detail pages to persisted API data.
+4. **Next:** 0G Storage adapter and testnet artifact proof.
+5. **Next:** Solidity registry/purchase contract, wallet flow, and protected access.
+6. **Later:** dashboards, SDK, stronger provenance, optional 0G Compute.
+7. **Submission:** mainnet proof, Explorer links, demo video, public documentation, and X post.

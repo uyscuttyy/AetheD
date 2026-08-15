@@ -6,18 +6,20 @@ AetheD is a trust layer for machine-readable data. It profiles uploaded datasets
 
 ## Current status
 
-Milestone 1 implements bounded CSV/JSON/JSONL parsing, deterministic profiling, evidence-aware verification dimensions, integrity hashing, and AetheScore methodology `1.0.0`. Marketplace UI, persistence, 0G adapters, and contracts are intentionally not implemented yet.
+AetheD currently includes a tested deterministic verification engine, AetheScore methodology `1.0.0`, versioned Data Passports, local artifact storage, in-memory repository and queue implementations, framework-neutral API handlers, a working Next.js marketplace demo, and a local `/sell` upload-to-verification flow.
+
+The current implementation is a local prototype. PostgreSQL, Redis, wallet commerce, smart contracts, protected access, and real 0G integrations are not implemented yet. Synthetic marketplace records are clearly labeled and must not be presented as independently verified data.
 
 ## Planned architecture
 
 - `apps/web`: Next.js human interface
-- `apps/api`: typed marketplace and agent API
+- `apps/api`: API adapter boundary; domain handlers currently live in `packages/domain`
 - `packages/domain`: shared entities and business interfaces
 - `packages/config`: validated runtime configuration
 - `contracts`: Foundry Solidity marketplace contracts in a future milestone
 - `docs`: architecture and operational documentation
 
-The MVP will use deterministic local verification, 0G Storage for dataset and passport artifacts, and 0G Chain for registration and purchases. 0G Compute remains an optional provider for model-based analysis.
+The planned production MVP will use deterministic verification, 0G Storage for dataset and passport artifacts, and 0G Chain for registration and purchases. 0G Compute remains an optional future provider for model-based analysis.
 
 ## Local setup
 
@@ -26,6 +28,9 @@ npm install
 cp .env.example .env
 npm run typecheck
 npm test
+npm run lint
+npm run dev -- --hostname 127.0.0.1 --port 3000
+npm run api:dev
 ```
 
 No secrets are committed. Mainnet deployment will be a later, explicit milestone after testnet validation.

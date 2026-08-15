@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "next dev apps/web",
     "build": "next build apps/web",
+    "api:dev": "tsx apps/api/server.ts",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run"
@@ -15,10 +19,13 @@
     "eslint": "^9.17.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
+    "tsx": "^4.19.2",
+    "prisma": "^6.16.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

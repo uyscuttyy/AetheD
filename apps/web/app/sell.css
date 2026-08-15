@@ -1,0 +1,30 @@
+.sellPage { padding: 75px 0 120px; }
+.sellPage .pageIntro em { font-family: Georgia, serif; font-weight: 400; }
+.sellLayout { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; margin-top: 55px; }
+.uploadForm { border-top: 1px solid var(--border); padding-top: 18px; }
+.uploadForm label { display: block; margin: 20px 0; font-size: 11px; font-weight: 700; letter-spacing: .7px; }
+.uploadForm input:not([type="file"]), .uploadForm textarea, .uploadForm select { display: block; width: 100%; margin-top: 8px; border: 1px solid var(--border); background: var(--paper); padding: 14px; color: var(--text); font: inherit; }
+.uploadForm textarea { resize: vertical; }
+.fileDrop { position: relative; min-height: 100px; padding: 26px 18px; border: 1px dashed var(--muted); background: var(--paper); }
+.fileDrop strong, .fileDrop small { display: block; }
+.fileDrop small { margin-top: 7px; color: var(--muted); font-weight: 400; }
+.fileDrop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.uploadForm button { margin-top: 14px; }
+.uploadForm button:disabled { opacity: .45; cursor: not-allowed; }
+.verificationPanel { height: max-content; padding: 26px; border-top: 1px solid var(--border); background: var(--paper); }
+.verificationPanel h2 { margin: 20px 0 10px; font-size: 36px; letter-spacing: -1.5px; }
+.verificationPanel p { color: #53675c; line-height: 1.65; }
+.pipelineSteps { margin-top: 30px; border-top: 1px solid var(--border); }
+.pipelineSteps span, .resultMeta span { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+.pipelineSteps b { color: var(--text); }
+.resultState { margin: 28px 0; font-size: 18px; font-weight: 750; }
+.resultState i { display: inline-block; width: 9px; height: 9px; margin-right: 8px; border-radius: 50%; background: #2b8b55; }
+.resultState.failed i { background: #a15d48; }
+.resultScore { display: flex; align-items: center; gap: 18px; padding-bottom: 25px; border-bottom: 1px solid var(--border); }
+.resultScore strong { color: var(--forest); font: 72px Georgia, serif; }
+.resultScore span { font-weight: 700; }
+.resultScore small { color: var(--muted); font-weight: 400; }
+.resultMeta { margin-top: 8px; }
+.resultMeta code { font-size: 10px; }
+.errorText { color: #a15d48 !important; }
+@media (max-width: 800px) { .sellLayout { grid-template-columns: 1fr; gap: 35px; } }

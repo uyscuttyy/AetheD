@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DatasetStatus {
+  DRAFT
+  VERIFYING
+  PUBLISHED
+  FAILED
+}
+
+enum VerificationStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum EvidenceKind {
+  MEASURED
+  INFERRED
+  SELLER_PROVIDED
+  UNKNOWN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  datasets      Dataset[]
+}
+
+model Dataset {
+  id            String          @id @default(cuid())
+  sellerId      String
+  name          String
+  description   String
+  category      String
+  status        DatasetStatus   @default(DRAFT)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  seller        User            @relation(fields: [sellerId], references: [id])
+  versions      DatasetVersion[]
+
+  @@index([status, category])
+}
+
+model DatasetVersion {
+  id                    String              @id @default(cuid())
+  datasetId             String
+  version               String
+  format                String
+  sizeBytes             BigInt
+  recordCount           Int
+  contentHash           String
+  createdAt             DateTime            @default(now())
+  dataset               Dataset             @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  verifications         Verification[]
+  artifactReferences    ArtifactReference[]
+
+  @@unique([datasetId, version])
+  @@index([datasetId, createdAt])
+}
+
+model Verification {
+  id                String            @id @default(cuid())
+  datasetVersionId  String
+  status            VerificationStatus @default(QUEUED)
+  pipelineVersion   String
+  totalScore        Int?
+  confidence        Float?
+  profile           Json?
+  score             Json?
+  limitations       Json?
+  error             String?
+  createdAt         DateTime          @default(now())
+  completedAt       DateTime?
+  datasetVersion    DatasetVersion    @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+  dimensions        VerificationDimension[]
+  passport          DataPassport?
+
+  @@index([datasetVersionId, createdAt])
+  @@index([status])
+}
+
+model VerificationDimension {
+  id             String        @id @default(cuid())
+  verificationId String
+  name           String
+  score          Int?
+  confidence     Float
+  evidenceKind   EvidenceKind
+  signals        Json
+  limitations    Json
+  verification   Verification  @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@unique([verificationId, name])
+}
+
+model DataPassport {
+  id             String       @id @default(cuid())
+  verificationId String       @unique
+  passportVersion String
+  passportHash   String       @unique
+  generatedAt    DateTime     @default(now())
+  payload        Json
+  verification   Verification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+}
+
+model ArtifactReference {
+  id               String         @id @default(cuid())
+  datasetVersionId String
+  provider         String
+  reference        String
+  contentHash      String
+  kind             String
+  createdAt        DateTime       @default(now())
+  datasetVersion   DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, reference])
+  @@index([datasetVersionId, kind])
+}

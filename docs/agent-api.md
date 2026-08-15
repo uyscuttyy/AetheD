@@ -1,6 +1,6 @@
 # AetheD Agent API
 
-The first API contract is implemented as framework-neutral handlers. A later HTTP adapter will mount these under `/api/v1` and publish OpenAPI documentation.
+The API contract is implemented as framework-neutral handlers. A local Next.js adapter currently mounts dataset submission and verification lookup under `/api/v1` for the seller demo. A production API server and OpenAPI document are still planned.
 
 ## Response envelope
 
@@ -16,6 +16,11 @@ Successful responses use `{ "data": ... }`. Failures use:
 - `GET /api/v1/verifications/:id` — retrieve job status, evidence, AetheScore, and Data Passport.
 - `GET /api/v1/datasets/search` — search published datasets by text, category, format, and minimum score.
 - `GET /api/v1/datasets/:id` — retrieve the dataset and all version-specific verification records.
+
+Currently mounted by Next.js:
+
+- `POST /api/v1/datasets`
+- `GET /api/v1/verifications/:id`
 
 The temporary process endpoint used by tests represents a background worker and will not be exposed publicly in production.
 
