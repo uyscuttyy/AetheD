@@ -1,0 +1,6 @@
+import { DatasetCard } from "../../components/dataset-card";
+import { datasets } from "../../lib/demo-data";
+
+export default function MarketplacePage() {
+  return <section className="market shell"><div className="pageIntro"><span className="sectionIndex">DATA MARKETPLACE / DEMO</span><h1>Machine-ready data,<br/>with evidence attached.</h1><p>Search versioned datasets by subject, score, format, and intended use.</p></div><div className="search"><span>⌕</span><input aria-label="Search datasets" placeholder="Search datasets, topics, use cases…"/><button className="darkButton">Search</button></div><div className="marketBody"><aside><b>FILTERS</b>{["Category", "AetheScore", "Price", "Freshness", "Format", "Size", "Use case"].map((filter) => <button key={filter}>{filter}<span>+</span></button>)}</aside><div className="results"><div className="resultHead"><span>{datasets.length} datasets</span><select aria-label="Sort datasets"><option>Highest AetheScore</option><option>Newest</option><option>Lowest price</option></select></div><div className="cards">{datasets.map((dataset) => <DatasetCard key={dataset.id} dataset={dataset}/>)}</div></div></div></section>;
+}

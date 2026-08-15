@@ -1,0 +1,4 @@
+import type { DemoDataset } from "../lib/demo-data";
+export function DataPassport({ dataset }: { dataset: DemoDataset }) {
+  return <section className="passport"><div className="passportHead"><span>AETHED DATA PASSPORT</span><b>VERSION {dataset.version}</b></div><div className="passportTitle"><div><small>DATASET</small><h3>{dataset.name}</h3></div><strong>{dataset.score}<small>AetheScore</small></strong></div><div className="passportGrid"><div><small>Records</small><b>{dataset.records.toLocaleString()}</b></div><div><small>Format</small><b>{dataset.format}</b></div><div><small>Integrity</small><b className="verified">Verified</b></div><div><small>Provenance</small><b className="limited">Limited evidence</b></div><div><small>Storage</small><b>Pending 0G</b></div><div><small>Verification</small><b>Local deterministic</b></div></div><div className="hash"><small>DATASET HASH</small><code>{dataset.hash}</code></div></section>;
+}
