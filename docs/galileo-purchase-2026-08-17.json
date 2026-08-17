@@ -1,0 +1,13 @@
+{
+  "completedAt": "2026-08-17T20:23:58.936Z",
+  "chainId": 16602,
+  "contractAddress": "0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c",
+  "versionKey": "0xda2d3bc53dd493d42ad2e3d6b27eee45ba462f955fc3de0dd52a582ae6b77fe3",
+  "buyerAddress": "0x899c407AA07923D00852632fCdDCbbE60c8809B8",
+  "fundingTransactionHash": "0xf20f068d2bea3b4d8470a54caee95d989a3ff036c625f3f27560e86e44383ee7",
+  "purchaseTransactionHash": "0xa0444f191cc36c363020ad1a2718fde401e74c4f155ca423636a7929e0aa832c",
+  "blockNumber": 49968484,
+  "priceWei": "0",
+  "purchaseReadBack": true,
+  "notes": "Fresh ephemeral buyer wallet. Seller funded 0.0005 A0GI for Galileo gas."
+}
