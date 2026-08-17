@@ -4,11 +4,11 @@
 
 The official 0G Storage integration now targets Galileo Testnet through `@0gfoundation/0g-storage-ts-sdk@1.2.11`. `ZeroGStorageArtifactStore` uses the SDK's `Indexer` and `ZgFile` APIs, validates the locally calculated Merkle root against the upload result, and retrieves by root hash with proof verification.
 
-AetheD is a TypeScript repository with a Next.js 15 web demo, a framework-neutral domain/API layer, and a standalone Node API that can explicitly select PostgreSQL persistence. There is no deployed production backend, contract, or 0G integration.
+AetheD is a TypeScript repository with a Next.js 15 web demo, a framework-neutral domain/API layer, and a standalone Node API that can explicitly select PostgreSQL persistence. The Galileo contract and 0G Storage integration are live on testnet; there is no deployed production backend or mainnet contract.
 
 The working implementation is split between:
 
-- `apps/web`: Next.js App Router human interface using synthetic in-module data.
+- `apps/web`: Next.js App Router human interface using API-backed data with a labeled synthetic development fallback.
 - `apps/api/server.ts`: standalone Node HTTP adapter with injected dependencies and environment-configured runtime persistence.
 - `packages/domain/src`: parsing, profiling, scoring, passports, artifacts, repository/job abstractions, application service, and API handlers.
 - `packages/config/src/env.ts`: runtime configuration validation.
@@ -50,7 +50,7 @@ The seller vertical slice adds `/sell` plus local Next routes under `apps/web/ap
 - `LocalArtifactStore.put` is write-once (`flag: "wx"`) and rejects references that fail its safe character pattern. It is not an 0G client.
 - `VerificationApplicationService` writes inputs through `VerificationInputStore` before enqueueing identifiers. The configured API uses filesystem-backed inputs and BullMQ, allowing a new worker process to recover queued work when the artifact root is persistent and shared.
 - `AetheDApi.search` loops over the repository in memory, chooses the most recently created version, and only returns `published` datasets.
-- The web dataset detail page is an async server component using static demo data. Buy and wallet controls have no action behind them.
+- The web dataset detail page is an async server component using static demo data. Registered API-backed versions render a client purchase panel; demo records remain non-purchasable.
 - `/sell` reads the entire browser file with `File.text()` and submits it as JSON. Production must replace this with bounded multipart/streaming upload.
 - The standalone multipart upload route returns queued work; `apps/api/worker.ts` processes BullMQ jobs separately.
 
@@ -81,7 +81,7 @@ The seller vertical slice adds `/sell` plus local Next routes under `apps/web/ap
 - BullMQ jobs retry four times with exponential backoff. A formal dead-letter/replay UI is not implemented.
 - The service stores complete parsed datasets in memory and does not stream large files.
 - The parser has no malware scanning, CSV-injection mitigation policy, URL/metadata safety policy, or near-duplicate detection.
-- There is no authentication, authorization, rate limiting, wallet integration, access grant, or purchase implementation.
+- Wallet purchase reconciliation and signature-gated access grants are implemented. Session authentication, rate limiting, dashboards, and encrypted delivery are not.
 - 0G Chain, 0G Storage, and 0G Compute are absent from runtime code.
 - Marketplace and detail pages read the standalone API when `AETHED_API_URL` is set; controls themselves remain mostly presentational.
 - There are no browser/e2e tests or screenshot checks.

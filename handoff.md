@@ -2,7 +2,7 @@
 
 ## Where We Are
 
-AetheD is a functioning prototype with deterministic verification, a Next.js marketplace demo, PostgreSQL/BullMQ runtime infrastructure, a 0G Storage adapter, and a deployed Galileo registry/purchase contract. The web UI still uses synthetic fallback data and is not connected to a wallet.
+AetheD is a functioning prototype with deterministic verification, a Next.js marketplace demo, PostgreSQL/BullMQ runtime infrastructure, a 0G Storage adapter, and a deployed Galileo registry/purchase contract. API-backed registered listings now support browser-wallet purchase, receipt reconciliation, and signed access lookup; synthetic fallback listings remain deliberately non-purchasable.
 
 The product thesis remains: **AetheD is the trust layer for machine-readable data, turning raw datasets into verified, scored, and programmable assets for AI agents.** The current implementation proves the verification and presentation concepts locally; it does not yet prove decentralized storage or commerce.
 
@@ -36,8 +36,8 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 
 ## Currently Working
 
-- Add browser wallet purchase, receipt reconciliation, and version-specific access grants.
-- Purchase receipt reconciliation and signed exact-version access lookup are implemented in the API; browser wallet transaction preparation and encrypted delivery remain next.
+- Replace public-root delivery with encrypted or mediated buyer delivery.
+- Purchase receipt reconciliation, browser transaction submission, and signed exact-version access lookup are implemented; encrypted delivery remains next.
 - `npm test`: 10 test files and 25 tests passing; one PostgreSQL integration test is skipped without `DATABASE_URL`.
 - `npm run typecheck`: passing.
 - Next.js development server starts with `npm run dev -- --hostname 127.0.0.1 --port 3000`.
@@ -57,8 +57,8 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 - Verification parsing still materializes the bounded staged file in worker memory after upload; truly large datasets need incremental parser/profiler stages.
 - Web pages fall back to labeled demo data if `AETHED_API_URL` is missing or unavailable.
 - Marketplace search/filter controls are presentational.
-- Wallet connection, authentication, purchases, payments, access grants, and dashboards are absent.
-- Browser wallet connection and purchase submission are absent. Backend receipt reconciliation and signed access grants are present, but 0G artifacts are not yet encrypted per buyer.
+- Wallet sessions, encrypted delivery, buyer/seller dashboards, and production authentication are absent.
+- Browser wallet purchases and signed access grants are present for registered API-backed listings, but 0G artifacts are not yet encrypted per buyer.
 - The standard Galileo Storage indexer returned HTTP 503 during the smoke run; the successful proof used the responsive turbo indexer endpoint.
 - No mainnet contract address or Explorer activity exists for the Buildathon submission.
 - No real 0G Compute integration exists.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./styles.css";
 import "./sell.css";
+import "./purchase.css";
 
 export const metadata: Metadata = {
   title: "AetheD — Verified data for autonomous AI",

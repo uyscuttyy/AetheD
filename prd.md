@@ -7,7 +7,7 @@
 
 AetheD is a trust layer and marketplace foundation for machine-readable datasets. It analyzes dataset structure and quality, calculates an evidence-aware AetheScore, generates a version-specific Data Passport, and is intended to let humans and AI agents discover, evaluate, purchase, and access datasets.
 
-The current repository is a tested prototype with deterministic verification, PostgreSQL persistence, Redis-backed jobs, bounded multipart uploads, API-backed marketplace/detail paths, a 0G Storage adapter, and a separate worker. A registry/purchase contract is deployed on Galileo and the worker can publish verified version hashes to it. Wallet commerce, access control, mainnet deployment, and a documented live end-to-end storage/registry proof remain incomplete.
+The current repository is a tested prototype with deterministic verification, PostgreSQL persistence, Redis-backed jobs, bounded multipart uploads, API-backed marketplace/detail paths, a 0G Storage adapter, and a separate worker. A registry/purchase contract is deployed on Galileo and the worker can publish verified version hashes to it. Browser-wallet commerce and signed access lookup are implemented for registered listings. Encrypted delivery, mainnet deployment, and a live buyer purchase remain incomplete.
 
 ## Problem
 
@@ -42,7 +42,7 @@ An exact dataset version receives structured verification evidence, an explainab
 - After verification and artifact storage, the worker can register the dataset and exact version integrity hashes.
 - Dataset keys, version keys, and transaction hashes are persisted with the verification record.
 - Publication is idempotent for worker retries and requires `sellerAddress` to match the configured signer because the contract uses `msg.sender` as seller ownership.
-- Live dataset/version transactions and contract read-back completed on 2026-08-17. Browser wallet purchase, event reconciliation, and access grants are not implemented.
+- Live dataset/version transactions and contract read-back completed on 2026-08-17. The browser buyer flow and backend event reconciliation/access grants are implemented; protected artifact delivery remains outstanding.
 
 ### Deterministic Dataset Parsing — Implemented
 

@@ -108,11 +108,11 @@ This roadmap starts from the audited repository state. It does not represent a g
 
 ### P0 — Smart contract and wallet purchase
 
-- **Status:** Galileo contract deployed and publication client wired; buyer flow pending
+- **Status:** Browser buyer flow implemented; live buyer transaction still to be recorded
 - **Description:** Deploy a compact dataset/version registry and purchase contract; add wallet connection, purchase confirmation, and event reconciliation.
 - **Relevant files:** `contracts/`, `apps/web`, `apps/api`, `.env.example`
 - **Dependencies:** Confirm 0G chain ID/RPC/currency and official Buildathon network requirements.
-- **Current boundary:** `AetheDRegistry` is deployed on Galileo chain `16602` at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`. Live dataset/version registration and read-back are proven. Wallet purchase UI, purchase event reconciliation, and access issuance remain incomplete. `OG_CONTRACT_ADDRESS` stays optional with no fallback value.
+- **Current boundary:** `AetheDRegistry` is deployed on Galileo chain `16602` at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`. Live dataset/version registration and read-back are proven. Registered API listings can connect an injected wallet, submit purchase(versionKey), reconcile the receipt, and request signed access. A live buyer purchase still needs to be recorded. `OG_CONTRACT_ADDRESS` stays optional with no fallback value.
 - **Definition of done:** Run and document one live storage/registry publication, record a purchase on testnet, reconcile its receipt, and show the transaction/access state in the app.
 
 ### P0 — Access authorization

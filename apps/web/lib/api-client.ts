@@ -1,7 +1,8 @@
 import { getDataset as getDemoDataset, datasets as demoDatasets, type DemoDataset } from "./demo-data";
 
 const apiUrl = () => process.env.AETHED_API_URL?.replace(/\/$/, "");
-type ApiDataset = { id: string; name: string; description: string; category: string; versions: Array<{ version: string; format: string; sizeBytes: number; recordCount: number; contentHash: string; verification?: { score?: { score: number; confidence: number; dimensions: Record<string, { score: number | null }> }; passport?: { contentHash?: string } } }> };
+type RegistryPublication = { chainId: number; contractAddress: string; versionKey: string };
+type ApiDataset = { id: string; name: string; description: string; category: string; versions: Array<{ id: string; version: string; format: string; sizeBytes: number; recordCount: number; contentHash: string; verification?: { score?: { score: number; confidence: number; dimensions: Record<string, { score: number | null }> }; passport?: { contentHash?: string }; registryPublication?: RegistryPublication } }> };
 type ApiSearchDataset = { id: string; name: string; category: string; version: string; format: string; recordCount: number; aetheScore?: number; confidence?: number };
 
 const toView = (value: ApiDataset): DemoDataset => {
@@ -36,4 +37,24 @@ export async function fetchDataset(id: string): Promise<{ dataset?: DemoDataset;
   if (!allowDemo) return { source: "unavailable" };
   const demo = getDemoDataset(id);
   return demo ? { dataset: demo, source: "demo" } : { source: "demo" };
+}
+
+export type DatasetCommerce = { datasetVersionId: string; chainId: number; contractAddress: string; versionKey: string };
+
+export async function fetchDatasetWithCommerce(id: string): Promise<{ dataset?: DemoDataset; commerce?: DatasetCommerce; source: DataSource }> {
+  const base = apiUrl();
+  if (base) try {
+    const response = await fetch(`${base}/api/v1/datasets/${encodeURIComponent(id)}`, { next: { revalidate: 15 } });
+    if (response.ok) {
+      const value = (await response.json() as { data: ApiDataset }).data;
+      const version = value.versions.at(-1);
+      const publication = version?.verification?.registryPublication;
+      return {
+        dataset: toView(value), source: "api",
+        ...(version && publication ? { commerce: { datasetVersionId: version.id, chainId: publication.chainId, contractAddress: publication.contractAddress, versionKey: publication.versionKey } } : {})
+      };
+    }
+  } catch {}
+  const fallback = await fetchDataset(id);
+  return fallback;
 }
