@@ -7,7 +7,7 @@
 
 AetheD is a trust layer and marketplace foundation for machine-readable datasets. It analyzes dataset structure and quality, calculates an evidence-aware AetheScore, generates a version-specific Data Passport, and is intended to let humans and AI agents discover, evaluate, purchase, and access datasets.
 
-The current repository is a tested prototype with deterministic verification, PostgreSQL persistence, Redis-backed jobs, bounded multipart uploads, API-backed marketplace/detail paths, a 0G Storage adapter, and a separate worker. A registry/purchase contract is deployed on Galileo and the worker can publish verified version hashes to it. Browser-wallet commerce and signed access lookup are implemented for registered listings. Encrypted delivery, mainnet deployment, and a live buyer purchase remain incomplete.
+The current repository is a tested prototype with deterministic verification, PostgreSQL persistence, Redis-backed jobs, bounded multipart uploads, API-backed marketplace/detail paths, a 0G Storage adapter, and a separate worker. A registry/purchase contract is deployed on Galileo and the worker can publish verified version hashes to it. Registered listings support browser-wallet commerce and signature-protected mediated downloads without exposing storage roots. Mainnet deployment and a live buyer purchase remain incomplete.
 
 ## Problem
 

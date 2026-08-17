@@ -4,6 +4,7 @@ import {
   InMemoryCommerceRepository,
   InMemoryDatasetRepository,
   type ConfirmedPurchase,
+  type ArtifactStore,
   type PurchaseReceiptVerifier
 } from "../packages/domain/src/index.js";
 
@@ -46,7 +47,14 @@ async function setup(overrides: Partial<ConfirmedPurchase> = {}) {
     ...overrides
   };
   const verifier: PurchaseReceiptVerifier = { verify: async () => confirmed };
-  return { service: new CommerceApplicationService(datasets, new InMemoryCommerceRepository(), verifier, { verify: async () => undefined }), version, confirmed };
+  const artifactStore: ArtifactStore = {
+    put: async () => { throw new Error("not used"); },
+    get: async (reference) => {
+      expect(reference).toBe(`0x${"22".repeat(32)}`);
+      return new TextEncoder().encode("protected dataset");
+    }
+  };
+  return { service: new CommerceApplicationService(datasets, new InMemoryCommerceRepository(), verifier, { verify: async () => undefined }, artifactStore), version, confirmed };
 }
 
 describe("CommerceApplicationService", () => {
@@ -56,7 +64,9 @@ describe("CommerceApplicationService", () => {
     const second = await service.reconcile({ datasetVersionId: version.id, buyerAddress: confirmed.buyerAddress, transactionHash: confirmed.transactionHash });
     expect(second.purchase.id).toBe(first.purchase.id);
     expect(second.accessGrant.id).toBe(first.accessGrant.id);
-    expect((await service.getAccess({ datasetVersionId: version.id, buyerAddress: confirmed.buyerAddress, timestamp: new Date().toISOString(), signature: "test" })).artifact).toMatchObject({ provider: "0g" });
+    const proof = { datasetVersionId: version.id, buyerAddress: confirmed.buyerAddress, timestamp: new Date().toISOString(), signature: "test" };
+    expect((await service.getAccess(proof)).delivery).toEqual({ method: "mediated" });
+    expect(new TextDecoder().decode((await service.getContent(proof)).content)).toBe("protected dataset");
   });
 
   it("rejects a receipt for a different version", async () => {

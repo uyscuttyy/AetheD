@@ -31,10 +31,13 @@ describe("AetheD API", () => {
     await api.processVerifications();
     const verification = await api.getVerification(ids.verificationId);
     expect(verification.status).toBe(200);
+    expect((verification.body as { data: { passport: { storage?: unknown } } }).data.passport.storage).toBeUndefined();
     const search = await api.search({ q: "crypto", category: "finance", format: "json" });
     expect(search.status).toBe(200);
     expect((search.body as { data: unknown[] }).data).toHaveLength(1);
-    expect((await api.getDataset(ids.datasetId)).status).toBe(200);
+    const detail = await api.getDataset(ids.datasetId);
+    expect(detail.status).toBe(200);
+    expect((detail.body as { data: { versions: Array<{ verification: { passport: { storage?: unknown } } }> } }).data.versions[0]?.verification.passport.storage).toBeUndefined();
   });
 
   it("returns stable client errors", async () => {

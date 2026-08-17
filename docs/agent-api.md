@@ -31,7 +31,8 @@ The temporary process endpoint used by tests represents a background worker and 
 3. Retrieve one version-specific Data Passport.
 4. Submit the wallet transaction to `purchase(versionKey)` on the configured registry contract.
 5. Reconcile it with `POST /api/v1/purchases/reconcile` using `datasetVersionId`, `buyerAddress`, and `transactionHash`.
-6. Sign the exact access-proof message and call `GET /api/v1/versions/:id/access` with `buyerAddress`, `timestamp`, and `signature`.
+6. Sign the exact access-proof message and call `GET /api/v1/versions/:id/access` with `buyerAddress`, `timestamp`, and `signature` to confirm the mediated delivery grant.
+7. Download the bytes from `GET /api/v1/versions/:id/content` with the same proof. The API verifies the grant and retrieves the artifact without disclosing its storage reference.
 
 The access-proof message is:
 
@@ -41,3 +42,5 @@ Version: <datasetVersionId>
 Buyer: <checksummed buyer address>
 Timestamp: <ISO-8601 timestamp>
 ```
+
+Public dataset and verification responses omit storage and verification-artifact references. The content endpoint returns `application/octet-stream` and includes the expected integrity value in `x-aethed-content-hash`.

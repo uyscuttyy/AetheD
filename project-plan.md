@@ -117,11 +117,11 @@ This roadmap starts from the audited repository state. It does not represent a g
 
 ### P0 — Access authorization
 
-- **Status:** Backend grant and wallet-proof boundary implemented; encrypted delivery pending
+- **Status:** Signature-protected mediated delivery implemented; client-side encryption remains optional hardening
 - **Description:** Issue version-specific access grants only after confirmed purchases and prevent unauthorized retrieval.
 - **Relevant files:** New access service/API routes, repository entities, contract event handlers.
 - **Dependencies:** Durable persistence and purchase reconciliation.
-- **Definition of done:** Reconciliation and denial behavior are implemented. Completion requires encrypted or mediated artifact delivery so knowledge of a 0G root is not sufficient to bypass authorization.
+- **Definition of done:** Reconciliation, denial behavior, public-reference redaction, and signature-protected mediated downloads are implemented. The next validation step is a live buyer purchase and download on Galileo.
 
 ## Later
 

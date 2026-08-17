@@ -27,6 +27,12 @@ export type SearchQuery = {
 
 const error = (status: number, code: string, message: string): ApiResponse<ApiError> => ({ status, body: { error: { code, message } } });
 
+const publicVerification = <T extends { passport?: { storage?: unknown; verificationArtifact?: unknown } }>(verification: T): T => {
+  if (!verification.passport) return verification;
+  const { storage: _storage, verificationArtifact: _verificationArtifact, ...passport } = verification.passport;
+  return { ...verification, passport } as T;
+};
+
 export class AetheDApi {
   constructor(
     private readonly repository: DatasetRepository,
@@ -60,7 +66,7 @@ export class AetheDApi {
   async getVerification(id: string): Promise<ApiResponse<unknown>> {
     const verification = await this.repository.getVerification(id);
     if (!verification) return error(404, "VERIFICATION_NOT_FOUND", "Verification not found");
-    return { status: 200, body: { data: verification } };
+    return { status: 200, body: { data: publicVerification(verification) } };
   }
 
   async getDataset(id: string): Promise<ApiResponse<unknown>> {
@@ -68,7 +74,7 @@ export class AetheDApi {
     if (!dataset) return error(404, "DATASET_NOT_FOUND", "Dataset not found");
     const versions = await this.repository.listVersions(id);
     const enrichedVersions = await Promise.all(versions.map(async (version) => ({
-      ...version, verification: await this.repository.findLatestVerification(version.id)
+      ...version, verification: await this.repository.findLatestVerification(version.id).then((value) => value ? publicVerification(value) : value)
     })));
     return { status: 200, body: { data: { ...dataset, versions: enrichedVersions } } };
   }

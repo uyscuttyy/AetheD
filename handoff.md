@@ -36,8 +36,8 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 
 ## Currently Working
 
-- Replace public-root delivery with encrypted or mediated buyer delivery.
-- Purchase receipt reconciliation, browser transaction submission, and signed exact-version access lookup are implemented; encrypted delivery remains next.
+- Record a live Galileo buyer purchase and validate the complete browser download flow.
+- Purchase receipt reconciliation, browser transaction submission, public-root redaction, and signature-protected mediated delivery are implemented.
 - `npm test`: 10 test files and 25 tests passing; one PostgreSQL integration test is skipped without `DATABASE_URL`.
 - `npm run typecheck`: passing.
 - Next.js development server starts with `npm run dev -- --hostname 127.0.0.1 --port 3000`.
@@ -58,7 +58,7 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 - Web pages fall back to labeled demo data if `AETHED_API_URL` is missing or unavailable.
 - Marketplace search/filter controls are presentational.
 - Wallet sessions, encrypted delivery, buyer/seller dashboards, and production authentication are absent.
-- Browser wallet purchases and signed access grants are present for registered API-backed listings, but 0G artifacts are not yet encrypted per buyer.
+- Browser wallet purchases and mediated downloads are present for registered API-backed listings. Client-side encryption is not implemented.
 - The standard Galileo Storage indexer returned HTTP 503 during the smoke run; the successful proof used the responsive turbo indexer endpoint.
 - No mainnet contract address or Explorer activity exists for the Buildathon submission.
 - No real 0G Compute integration exists.
@@ -86,7 +86,7 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 
 ## Highest-Priority Next Work
 
-Connect the dataset detail page to a browser wallet, prepare the exact `purchase(versionKey)` transaction, submit its receipt for reconciliation, and replace raw storage-root access with encrypted or mediated delivery.
+Execute and document a live buyer purchase plus mediated download on Galileo, then prepare the hosted submission package.
 
 ## How to Run
 

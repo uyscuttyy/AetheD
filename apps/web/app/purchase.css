@@ -25,14 +25,3 @@
   line-height: 1.45;
   text-align: center;
 }
-
-.accessRoot {
-  display: block;
-  margin-top: 14px;
-  padding: 10px;
-  overflow-wrap: anywhere;
-  border: 1px solid var(--border);
-  background: var(--cream);
-  font-size: 9px;
-  line-height: 1.45;
-}

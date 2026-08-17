@@ -1,4 +1,4 @@
-import type { ArtifactReference } from "./artifact.js";
+import type { ArtifactStore } from "./artifact.js";
 import type { DatasetRepository } from "./repository.js";
 
 export type ConfirmedPurchase = {
@@ -71,7 +71,8 @@ export class CommerceApplicationService {
     private readonly datasets: DatasetRepository,
     private readonly commerce: CommerceRepository,
     private readonly verifier: PurchaseReceiptVerifier,
-    private readonly accessProofVerifier?: AccessProofVerifier
+    private readonly accessProofVerifier?: AccessProofVerifier,
+    private readonly artifactStore?: ArtifactStore
   ) {}
 
   async reconcile(input: { datasetVersionId: string; buyerAddress: string; transactionHash: string }): Promise<{ purchase: PurchaseRecord; accessGrant: AccessGrantRecord }> {
@@ -89,14 +90,25 @@ export class CommerceApplicationService {
     return { purchase, accessGrant };
   }
 
-  async getAccess(input: { datasetVersionId: string; buyerAddress: string; timestamp: string; signature: string }): Promise<{ grant: AccessGrantRecord; artifact: ArtifactReference }> {
+  async getAccess(input: { datasetVersionId: string; buyerAddress: string; timestamp: string; signature: string }): Promise<{ grant: AccessGrantRecord; delivery: { method: "mediated" } }> {
+    const grant = await this.authorizeAccess(input);
+    return { grant, delivery: { method: "mediated" } };
+  }
+
+  async getContent(input: { datasetVersionId: string; buyerAddress: string; timestamp: string; signature: string }): Promise<{ content: Uint8Array; contentHash: string }> {
+    await this.authorizeAccess(input);
+    if (!this.artifactStore) throw new Error("Artifact delivery is not configured");
+    const verification = await this.datasets.findLatestVerification(input.datasetVersionId);
+    const storage = verification?.passport?.storage;
+    if (!storage || !verification.passport) throw new Error("Dataset artifact is unavailable");
+    return { content: await this.artifactStore.get(storage.reference), contentHash: verification.passport.datasetHash };
+  }
+
+  private async authorizeAccess(input: { datasetVersionId: string; buyerAddress: string; timestamp: string; signature: string }): Promise<AccessGrantRecord> {
     if (!this.accessProofVerifier) throw new Error("Wallet access proof is not configured");
     await this.accessProofVerifier.verify(input);
     const grant = await this.commerce.findAccessGrant(input.datasetVersionId, input.buyerAddress);
     if (!grant) throw new Error("Access grant not found");
-    const verification = await this.datasets.findLatestVerification(input.datasetVersionId);
-    const storage = verification?.passport?.storage;
-    if (!storage) throw new Error("Dataset artifact is unavailable");
-    return { grant, artifact: { provider: storage.provider as "local" | "0g", reference: storage.reference, contentHash: verification.passport!.datasetHash } };
+    return grant;
   }
 }

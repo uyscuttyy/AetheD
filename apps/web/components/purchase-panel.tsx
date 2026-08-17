@@ -30,7 +30,6 @@ export function PurchasePanel(props: { datasetVersionId: string; chainId: number
   const [account, setAccount] = useState("");
   const [priceWei, setPriceWei] = useState<bigint>();
   const [message, setMessage] = useState("Connect a wallet to load the live listing.");
-  const [accessRoot, setAccessRoot] = useState("");
 
   async function connect() {
     try {
@@ -48,7 +47,7 @@ export function PurchasePanel(props: { datasetVersionId: string; chainId: number
       const address = await signer.getAddress();
       const version = await new Contract(props.contractAddress, ABI, provider).getFunction("getVersion")(props.versionKey);
       if (!version.active) throw new Error("This listing is paused");
-      setAccount(address); setPriceWei(version.price); setAccessRoot(""); setStatus("ready");
+      setAccount(address); setPriceWei(version.price); setStatus("ready");
       setMessage(`Connected ${address.slice(0, 6)}…${address.slice(-4)}`);
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Wallet connection failed"); }
   }
@@ -81,10 +80,13 @@ export function PurchasePanel(props: { datasetVersionId: string; chainId: number
       const timestamp = new Date().toISOString();
       const signature = await signer.signMessage(accessMessage(props.datasetVersionId, buyerAddress, timestamp));
       const query = new URLSearchParams({ buyerAddress, timestamp, signature });
-      const response = await fetch(`/api/v1/versions/${encodeURIComponent(props.datasetVersionId)}/access?${query}`);
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error?.message ?? "Access was not granted");
-      setAccessRoot(body.data.artifact.reference); setStatus("granted"); setMessage("Exact-version access granted.");
+      const response = await fetch(`/api/v1/versions/${encodeURIComponent(props.datasetVersionId)}/content?${query}`);
+      if (!response.ok) { const body = await response.json(); throw new Error(body.error?.message ?? "Access was not granted"); }
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url; link.download = `aethed-${props.datasetVersionId}`; link.click();
+      URL.revokeObjectURL(url);
+      setStatus("granted"); setMessage("Exact-version artifact downloaded.");
     } catch (error) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Access proof failed"); }
   }
 
@@ -97,6 +99,5 @@ export function PurchasePanel(props: { datasetVersionId: string; chainId: number
       : status === "granted" ? <button className="darkButton" onClick={() => requestAccess()}>Refresh Access Proof</button>
       : <button className="darkButton" disabled>{status === "purchasing" ? "Confirming…" : status === "reconciling" ? "Reconciling…" : "Signing…"}</button>}
     <small>{message}</small>
-    {accessRoot && <code className="accessRoot">0G root: {accessRoot}</code>}
   </div>;
 }

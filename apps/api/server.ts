@@ -16,6 +16,15 @@ function send(response: ServerResponse, status: number, body: unknown) {
   response.statusCode = status; response.setHeader("content-type", "application/json"); response.end(JSON.stringify(body));
 }
 
+function sendContent(response: ServerResponse, content: Uint8Array, contentHash: string) {
+  response.statusCode = 200;
+  response.setHeader("content-type", "application/octet-stream");
+  response.setHeader("content-length", content.byteLength);
+  response.setHeader("content-disposition", "attachment");
+  response.setHeader("x-aethed-content-hash", contentHash);
+  response.end(Buffer.from(content));
+}
+
 async function body(request: IncomingMessage, maxBodyBytes: number): Promise<unknown> {
   const chunks: Buffer[] = []; let size = 0;
   for await (const chunk of request) { const value = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk); size += value.length; if (size > maxBodyBytes) throw new Error(`Request body exceeds ${maxBodyBytes} bytes`); chunks.push(value); }
@@ -68,6 +77,21 @@ export function createApiServer(options: ApiServerOptions) {
         });
         return send(response, result.status, result.body);
       }
+      const content = path.match(/^\/api\/v1\/versions\/([^/]+)\/content$/);
+      if (request.method === "GET" && content) {
+        if (!options.commerceService) return send(response, 503, { error: { code: "COMMERCE_UNAVAILABLE", message: "Artifact delivery is not configured" } });
+        const url = new URL(request.url ?? "/", "http://localhost");
+        try {
+          const delivered = await options.commerceService.getContent({
+            datasetVersionId: content[1]!, buyerAddress: url.searchParams.get("buyerAddress") ?? "",
+            timestamp: url.searchParams.get("timestamp") ?? "", signature: url.searchParams.get("signature") ?? ""
+          });
+          return sendContent(response, delivered.content, delivered.contentHash);
+        } catch (caught) {
+          const message = caught instanceof Error ? caught.message : "Artifact delivery failed";
+          return send(response, message.includes("not found") ? 404 : 403, { error: { code: "ACCESS_NOT_GRANTED", message } });
+        }
+      }
       const verification = path.match(/^\/api\/v1\/verifications\/([^/]+)$/);
       if (request.method === "GET" && verification) { const result = await api.getVerification(verification[1]!); return send(response, result.status, result.body); }
       return send(response, 404, { error: { code: "NOT_FOUND", message: "Route not found" } });
@@ -86,10 +110,11 @@ export function createApiServer(options: ApiServerOptions) {
 export function createConfiguredApiServer(env = loadEnv()): { server: ReturnType<typeof createServer>; persistence: RuntimePersistence } {
   const persistence = createRuntimePersistence({ provider: env.persistenceProvider, databaseUrl: env.databaseUrl });
   const queue = new BullMqVerificationQueue(env.redisUrl);
+  const artifactStore = createRuntimeArtifactStore({ provider: env.artifactStoreProvider, localRoot: env.artifactRoot, chainId: env.ogChainId, rpcUrl: env.ogChainRpcUrl, indexerUrl: env.ogStorageIndexerUrl, privateKey: env.privateKey });
   const service = new VerificationApplicationService(
     persistence.repository,
     queue,
-    createRuntimeArtifactStore({ provider: env.artifactStoreProvider, localRoot: env.artifactRoot, chainId: env.ogChainId, rpcUrl: env.ogChainRpcUrl, indexerUrl: env.ogStorageIndexerUrl, privateKey: env.privateKey }),
+    artifactStore,
     new FileVerificationInputStore(`${env.artifactRoot}/inputs`),
     createRuntimeRegistryPublisher({ chainId: env.ogChainId, rpcUrl: env.ogChainRpcUrl, contractAddress: env.ogContractAddress, privateKey: env.privateKey, defaultPriceWei: env.ogRegistryDefaultPriceWei })
   );
@@ -98,7 +123,7 @@ export function createConfiguredApiServer(env = loadEnv()): { server: ReturnType
         persistence.repository,
         persistence.commerceRepository,
         new GalileoPurchaseReceiptVerifier({ chainId: env.ogChainId, rpcUrl: env.ogChainRpcUrl, contractAddress: env.ogContractAddress }),
-        new EvmAccessProofVerifier()
+        new EvmAccessProofVerifier(), artifactStore
       )
     : undefined;
   return { server: createApiServer({
