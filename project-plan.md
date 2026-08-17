@@ -2,9 +2,9 @@
 
 ## Current Persistence Milestone
 
-- **Status:** Complete as an isolated persistence adapter; runtime wiring remains next.
-- **Files:** `prisma/schema.prisma`, `prisma/migrations/20260815190000_initial/migration.sql`, `packages/infrastructure/src/prisma-dataset-repository.ts`, `tests/prisma-repository.test.ts`.
-- **Definition of done:** migration applied locally, Prisma client generated, and repository round-trip test passes.
+- **Status:** Complete for repository runtime selection; durable job processing remains next.
+- **Files:** `prisma/schema.prisma`, `prisma/migrations/20260815190000_initial/migration.sql`, `packages/infrastructure/src/prisma-dataset-repository.ts`, `packages/infrastructure/src/runtime.ts`, `apps/api/server.ts`, and related tests.
+- **Definition of done:** migration applied locally, Prisma client generated, repository round-trip test passes, standalone API selects PostgreSQL explicitly, and production rejects memory persistence.
 
 This roadmap starts from the audited repository state. It does not represent a greenfield plan.
 
@@ -55,12 +55,12 @@ This roadmap starts from the audited repository state. It does not represent a g
 
 ### P0 — Infrastructure integration preparation
 
-- **Status:** In progress
+- **Status:** Partially complete
 - **Priority:** Highest
-- **Description:** Mount the tested Prisma repository behind runtime configuration, then replace the process-local queue with durable processing and mount the API over HTTP.
+- **Description:** The Prisma repository is mounted behind explicit validated runtime configuration. Replace the process-local queue and pending payload map with durable processing.
 - **Relevant files:** `packages/domain/src/repository.ts`, `jobs.ts`, `service.ts`, `api.ts`, `apps/api`
 - **Dependencies:** PostgreSQL/Redis choice, HTTP framework, deployment target.
-- **Definition of done:** Restart-safe records and jobs, documented `/api/v1` routes, validation, authentication boundary, and integration tests.
+- **Definition of done:** Records and jobs survive restart, failures/retries are persisted, and integration tests prove recovery.
 
 ### P0 — Standalone HTTP adapter
 
@@ -73,9 +73,18 @@ This roadmap starts from the audited repository state. It does not represent a g
 
 ## Next
 
+### P0 — Durable verification jobs
+
+- **Status:** Complete for the bounded-file MVP
+- **Priority:** Highest
+- **Description:** Add a Redis-backed queue/worker and durable verification input references so queued work survives API and worker restarts.
+- **Relevant files:** `packages/domain/src/jobs.ts`, `packages/domain/src/service.ts`, new infrastructure queue/worker modules, `apps/api`.
+- **Dependencies:** `REDIS_URL`, PostgreSQL runtime persistence, durable artifact/input storage decision.
+- **Definition of done:** Inputs are persisted before enqueueing, BullMQ jobs are recoverable, retries are configured, and unit/integration-capable tests exist.
+
 ### P0 — Production seller upload and verification UI
 
-- **Status:** Planned
+- **Status:** Complete for bounded multipart uploads
 - **Description:** Replace the local whole-file JSON flow with multipart/streaming upload, durable queue progress, validation, score, limitations, and passport.
 - **Relevant files:** `apps/web/app`, `apps/web/components`, `packages/domain/src/api.ts`
 - **Dependencies:** HTTP adapter and durable service contract, or a temporary local adapter for the first vertical slice.
@@ -83,35 +92,36 @@ This roadmap starts from the audited repository state. It does not represent a g
 
 ### P0 — Persistent database and job worker
 
-- **Status:** Planned
-- **Description:** Implement PostgreSQL schema/repository and Redis-backed worker with retries and failure persistence.
+- **Status:** Complete for the current MVP
+- **Description:** PostgreSQL schema/repository/runtime selection are implemented. Redis-backed worker, retries, and failure persistence remain.
 - **Relevant files:** New `prisma/` or equivalent, `apps/api`, `packages/domain/src/repository.ts`, `jobs.ts`
 - **Dependencies:** Local PostgreSQL/Redis and deployment choice.
 - **Definition of done:** Data survives restart; queued work is recoverable; migrations and integration tests exist.
 
 ### P0 — 0G Storage adapter
 
-- **Status:** Planned
+- **Status:** Implemented, wired, and proven on Galileo
 - **Description:** Implement the official current 0G Storage client behind `ArtifactStore`; store dataset artifact, manifest, verification JSON, and passport references.
 - **Relevant files:** `packages/domain/src/artifact.ts`, new `packages/integrations/0g-storage`
 - **Dependencies:** Confirm current official SDK/API, credentials, network, and testnet access.
-- **Definition of done:** A testnet upload produces a real 0G reference and hash that appears in the persisted passport.
+- **Definition of done:** Completed on 2026-08-17 with proof-enabled retrieval; receipt saved in `docs/galileo-smoke-2026-08-17.json`.
 
 ### P0 — Smart contract and wallet purchase
 
-- **Status:** Planned
+- **Status:** Galileo contract deployed and publication client wired; buyer flow pending
 - **Description:** Deploy a compact dataset/version registry and purchase contract; add wallet connection, purchase confirmation, and event reconciliation.
-- **Relevant files:** New `contracts/`, `apps/web`, `apps/api`, `.env.example`
+- **Relevant files:** `contracts/`, `apps/web`, `apps/api`, `.env.example`
 - **Dependencies:** Confirm 0G chain ID/RPC/currency and official Buildathon network requirements.
-- **Definition of done:** A dataset version is registered, a purchase is recorded on testnet, and the app shows the transaction state.
+- **Current boundary:** `AetheDRegistry` is deployed on Galileo chain `16602` at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`. Live dataset/version registration and read-back are proven. Wallet purchase UI, purchase event reconciliation, and access issuance remain incomplete. `OG_CONTRACT_ADDRESS` stays optional with no fallback value.
+- **Definition of done:** Run and document one live storage/registry publication, record a purchase on testnet, reconcile its receipt, and show the transaction/access state in the app.
 
 ### P0 — Access authorization
 
-- **Status:** Planned
+- **Status:** Backend grant and wallet-proof boundary implemented; encrypted delivery pending
 - **Description:** Issue version-specific access grants only after confirmed purchases and prevent unauthorized retrieval.
 - **Relevant files:** New access service/API routes, repository entities, contract event handlers.
 - **Dependencies:** Durable persistence and purchase reconciliation.
-- **Definition of done:** Purchased buyer can retrieve data/API credentials; unpaid buyer receives a stable authorization error.
+- **Definition of done:** Reconciliation and denial behavior are implemented. Completion requires encrypted or mediated artifact delivery so knowledge of a 0G root is not sufficient to bypass authorization.
 
 ## Later
 

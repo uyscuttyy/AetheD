@@ -29,5 +29,15 @@ The temporary process endpoint used by tests represents a background worker and 
 1. Search for datasets with structured filters.
 2. Compare scores, confidence, component evidence, and limitations.
 3. Retrieve one version-specific Data Passport.
-4. Initiate purchase through the future commerce endpoint.
-5. Retrieve an access grant after on-chain confirmation.
+4. Submit the wallet transaction to `purchase(versionKey)` on the configured registry contract.
+5. Reconcile it with `POST /api/v1/purchases/reconcile` using `datasetVersionId`, `buyerAddress`, and `transactionHash`.
+6. Sign the exact access-proof message and call `GET /api/v1/versions/:id/access` with `buyerAddress`, `timestamp`, and `signature`.
+
+The access-proof message is:
+
+```text
+AetheD dataset access
+Version: <datasetVersionId>
+Buyer: <checksummed buyer address>
+Timestamp: <ISO-8601 timestamp>
+```

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type Result = { status: string; score?: number; confidence?: number; passport?: { passportHash: string; datasetHash: string; limitations: string[] }; error?: string };
+type VerificationResponse = { data?: { status: string; score?: { score: number; confidence: number }; passport?: Result["passport"]; error?: string } };
 
 export default function SellPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -16,14 +17,26 @@ export default function SellPage() {
     if (!file || !name) return;
     setBusy(true); setResult({ status: "Uploading" });
     try {
-      const response = await fetch("/api/v1/datasets", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sellerAddress: "local-demo-seller", name, description, category, version: "1.0", filename: file.name, content: await file.text() }) });
+      const form = new FormData();
+      form.set("sellerAddress", "local-demo-seller");
+      form.set("name", name); form.set("description", description); form.set("category", category);
+      form.set("version", "1.0"); form.set("file", file);
+      const response = await fetch("/api/v1/uploads", { method: "POST", body: form });
       const body = await response.json();
       if (!response.ok || !body.data) throw new Error(body.error?.message ?? "Dataset submission failed");
       setResult({ status: "Verifying" });
-      const verification = await fetch(`/api/v1/verifications/${body.data.verificationId}`);
-      const verified = await verification.json();
+      let verified: VerificationResponse = {};
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const verification = await fetch(`/api/v1/verifications/${body.data.verificationId}`, { cache: "no-store" });
+        verified = await verification.json();
+        if (verified.data?.status === "completed" || verified.data?.status === "failed") break;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       if (!verified.data) throw new Error("Verification result unavailable");
-      setResult({ status: verified.data.status, score: verified.data.score?.score, confidence: verified.data.score?.confidence, passport: verified.data.passport, error: verified.data.error });
+      setResult({ status: verified.data.status,
+        ...(verified.data.score ? { score: verified.data.score.score, confidence: verified.data.score.confidence } : {}),
+        ...(verified.data.passport ? { passport: verified.data.passport } : {}),
+        ...(verified.data.error ? { error: verified.data.error } : {}) });
     } catch (error) {
       setResult({ status: "Failed", error: error instanceof Error ? error.message : "Unable to analyze dataset" });
     } finally { setBusy(false); }

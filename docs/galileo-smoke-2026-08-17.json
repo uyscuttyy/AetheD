@@ -1,0 +1,27 @@
+{
+  "completedAt": "2026-08-17T01:43:24.606Z",
+  "chainId": 16602,
+  "contractAddress": "0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c",
+  "sellerAddress": "0xc4ea5D6A6A20c7fD384aF51C26612E97A4af33ca",
+  "datasetId": "aethed-galileo-smoke-20260817014227167",
+  "versionId": "version-20260817014227167",
+  "storage": {
+    "rootHash": "0xebb6c0855b2d0e2039c11e94686cd2cff12c35065571ee39c0e23ae69d9f75c0",
+    "transactionHash": "0xb0b5163602062576ebd336a15afe160fb1ed3a5635208421a43c13230e3061a8",
+    "bytesVerified": 82
+  },
+  "registry": {
+    "datasetKey": "0x0e059cbc95e23ab242a051d3912e2d8771769badf448603cea5d43685779f483",
+    "versionKey": "0xda2d3bc53dd493d42ad2e3d6b27eee45ba462f955fc3de0dd52a582ae6b77fe3",
+    "datasetTransactionHash": "0x01dc6b169c81ea06deb2fa47853d68ae7a3e6a85b479be88f0ea70e1d1a12b04",
+    "versionTransactionHash": "0x9d657dfa310430cb09612b0afd897fa9bbb8e0924da4bcd37af2a293ddf7cbf4"
+  },
+  "readBack": {
+    "seller": "0xc4ea5D6A6A20c7fD384aF51C26612E97A4af33ca",
+    "datasetHash": "0xae82505c7d22aa138521622083239513ffc2628ab64ca86eea28f128c4dab10c",
+    "passportHash": "0xa6d1bb86c437f51a2659dff91cfd47deccd7a98ea10f26f32aa4ca4b3c773b04",
+    "storageRoot": "0xebb6c0855b2d0e2039c11e94686cd2cff12c35065571ee39c0e23ae69d9f75c0",
+    "price": "0",
+    "active": true
+  }
+}

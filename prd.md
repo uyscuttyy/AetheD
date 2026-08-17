@@ -7,7 +7,7 @@
 
 AetheD is a trust layer and marketplace foundation for machine-readable datasets. It analyzes dataset structure and quality, calculates an evidence-aware AetheScore, generates a version-specific Data Passport, and is intended to let humans and AI agents discover, evaluate, purchase, and access datasets.
 
-The current repository is a tested local prototype. Its deterministic verification domain and human-facing marketplace are implemented. Persistence, a deployed HTTP API, wallet commerce, access control, smart contracts, and real 0G integrations are not implemented.
+The current repository is a tested prototype with deterministic verification, PostgreSQL persistence, Redis-backed jobs, bounded multipart uploads, API-backed marketplace/detail paths, a 0G Storage adapter, and a separate worker. A registry/purchase contract is deployed on Galileo and the worker can publish verified version hashes to it. Wallet commerce, access control, mainnet deployment, and a documented live end-to-end storage/registry proof remain incomplete.
 
 ## Problem
 
@@ -26,6 +26,23 @@ AetheD makes verification the product and the marketplace its interface. It dist
 An exact dataset version receives structured verification evidence, an explainable AetheScore, an integrity hash, and a Data Passport. Those signals can be consumed by both a web interface and a predictable agent API.
 
 ## Current Functionality
+
+### 0G Galileo Storage Adapter — Implemented and Proven on Galileo
+
+- Uses `@0gfoundation/0g-storage-ts-sdk@1.2.11` with `Indexer` and `ZgFile`.
+- Uploads exact dataset bytes with a server-side testnet signer.
+- Validates the SDK upload root hash against the locally generated Merkle root.
+- Places the content-derived root hash in the Data Passport.
+- Supports proof-enabled retrieval by root hash.
+- A live 82-byte artifact was uploaded and proof-retrieved on 2026-08-17. The root and transaction receipt are recorded in `docs/galileo-smoke-2026-08-17.json`.
+
+### Galileo Registry Publication — Implemented and Proven
+
+- `AetheDRegistry` is deployed on chain `16602` at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`.
+- After verification and artifact storage, the worker can register the dataset and exact version integrity hashes.
+- Dataset keys, version keys, and transaction hashes are persisted with the verification record.
+- Publication is idempotent for worker retries and requires `sellerAddress` to match the configured signer because the contract uses `msg.sender` as seller ownership.
+- Live dataset/version transactions and contract read-back completed on 2026-08-17. Browser wallet purchase, event reconciliation, and access grants are not implemented.
 
 ### Deterministic Dataset Parsing — Implemented
 
@@ -110,19 +127,19 @@ An exact dataset version receives structured verification evidence, an explainab
 
 - `apps/api/server.ts` exposes `GET /health`, `POST /api/v1/datasets`, and `GET /api/v1/verifications/:id` over Node HTTP.
 - Request bodies are bounded to 25 MB and responses retain the domain API envelopes.
-- `npm run api:dev` runs the TypeScript server through `tsx` on `API_PORT` (default 4000).
-- The adapter still uses in-memory repository/queue state and local artifacts; it is not durable or authenticated.
+- `npm run api:dev` runs the TypeScript server through `tsx` using validated `API_HOST`, `API_PORT`, upload limit, artifact root, and persistence settings.
+- PostgreSQL is selected explicitly, verification inputs are written before BullMQ enqueueing, and a separate worker handles queued jobs with retries.
 
 ### Runtime Configuration — Partially Implemented
 
-### Persistence Schema — Implemented, Not Wired
+### Persistence Schema — Implemented and Runtime-Selectable
 
 - `prisma/schema.prisma` defines users, datasets, versioned dataset records, verifications, dimension evidence, passports, and artifact references.
 - Dataset versions are unique per dataset/version string and retain separate verification/passport records.
 - `docker-compose.yml` defines local PostgreSQL 16 and Redis 7 services.
-- Prisma validation and client generation pass, but no migration has been applied and runtime repositories still use memory.
+- Prisma validation/client generation and the initial migration are present. The standalone API can select PostgreSQL through `PERSISTENCE_PROVIDER=postgresql`; production rejects memory.
 
-- `packages/config/src/env.ts` validates `NODE_ENV`, `DATABASE_URL`, `REDIS_URL`, `API_PORT`, and optional 0G settings.
+- `packages/config/src/env.ts` validates persistence provider, database/Redis URLs, API host/port, upload limit, artifact root, web origin, and optional 0G settings.
 - `.env.example` contains placeholders only.
 - The current web demo does not consume the database, Redis, or 0G values.
 

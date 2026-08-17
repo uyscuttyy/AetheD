@@ -2,6 +2,7 @@ import { DatasetRepository } from "./repository.js";
 import { parseDataset } from "./parser.js";
 import { DatasetParseError } from "./dataset.js";
 import { VerificationApplicationService } from "./service.js";
+import { CommerceApplicationService } from "./commerce.js";
 
 export type ApiResponse<T> = { status: number; body: T };
 export type ApiError = { error: { code: string; message: string; details?: Record<string, unknown> } };
@@ -29,7 +30,8 @@ const error = (status: number, code: string, message: string): ApiResponse<ApiEr
 export class AetheDApi {
   constructor(
     private readonly repository: DatasetRepository,
-    private readonly verificationService: VerificationApplicationService
+    private readonly verificationService: VerificationApplicationService,
+    private readonly commerceService?: CommerceApplicationService
   ) {}
 
   async submitDataset(input: SubmitDatasetRequest): Promise<ApiResponse<unknown>> {
@@ -69,6 +71,29 @@ export class AetheDApi {
       ...version, verification: await this.repository.findLatestVerification(version.id)
     })));
     return { status: 200, body: { data: { ...dataset, versions: enrichedVersions } } };
+  }
+
+  async reconcilePurchase(input: { datasetVersionId: string; buyerAddress: string; transactionHash: string }): Promise<ApiResponse<unknown>> {
+    if (!this.commerceService) return error(503, "COMMERCE_UNAVAILABLE", "Purchase reconciliation is not configured");
+    if (!input.datasetVersionId || !input.buyerAddress || !input.transactionHash) return error(400, "INVALID_REQUEST", "datasetVersionId, buyerAddress, and transactionHash are required");
+    try {
+      return { status: 200, body: { data: await this.commerceService.reconcile(input) } };
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Purchase reconciliation failed";
+      const status = message.includes("not found") ? 404 : message.includes("not registered") ? 409 : 422;
+      return error(status, "PURCHASE_NOT_CONFIRMED", message);
+    }
+  }
+
+  async getAccess(input: { datasetVersionId: string; buyerAddress: string; timestamp: string; signature: string }): Promise<ApiResponse<unknown>> {
+    if (!this.commerceService) return error(503, "COMMERCE_UNAVAILABLE", "Access grants are not configured");
+    if (!input.datasetVersionId || !input.buyerAddress || !input.timestamp || !input.signature) return error(400, "INVALID_REQUEST", "datasetVersionId, buyerAddress, timestamp, and signature are required");
+    try {
+      return { status: 200, body: { data: await this.commerceService.getAccess(input) } };
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Access lookup failed";
+      return error(message.includes("not found") ? 404 : 409, "ACCESS_NOT_GRANTED", message);
+    }
   }
 
   async search(query: SearchQuery): Promise<ApiResponse<unknown>> {

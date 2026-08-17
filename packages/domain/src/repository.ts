@@ -1,6 +1,7 @@
 import { DataPassport } from "./passport.js";
 import { AetheScoreResult } from "./scoring.js";
 import { VerificationProfile } from "./verification.js";
+import { RegistryPublication } from "./registry.js";
 
 export type DatasetStatus = "draft" | "verifying" | "published" | "failed";
 
@@ -32,6 +33,7 @@ export type VerificationRecord = {
   profile?: VerificationProfile;
   score?: AetheScoreResult;
   passport?: DataPassport;
+  registryPublication?: RegistryPublication;
   error?: string;
   createdAt: string;
   completedAt?: string;
@@ -43,7 +45,7 @@ export interface DatasetRepository {
   createVerification(input: Omit<VerificationRecord, "id" | "createdAt" | "status">): Promise<VerificationRecord>;
   updateDataset(id: string, update: Partial<Pick<DatasetEntity, "status">>): Promise<DatasetEntity>;
   updateVersion(id: string, update: Partial<Pick<DatasetVersionRecord, "contentHash" | "recordCount">>): Promise<DatasetVersionRecord>;
-  updateVerification(id: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "error" | "completedAt">>): Promise<VerificationRecord>;
+  updateVerification(id: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "registryPublication" | "error" | "completedAt">>): Promise<VerificationRecord>;
   getDataset(id: string): Promise<DatasetEntity | undefined>;
   getVersion(id: string): Promise<DatasetVersionRecord | undefined>;
   getVerification(id: string): Promise<VerificationRecord | undefined>;
@@ -95,7 +97,7 @@ export class InMemoryDatasetRepository implements DatasetRepository {
     return value;
   }
 
-  async updateVerification(idValue: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "error" | "completedAt">>): Promise<VerificationRecord> {
+  async updateVerification(idValue: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "registryPublication" | "error" | "completedAt">>): Promise<VerificationRecord> {
     const existing = this.verifications.get(idValue);
     if (!existing) throw new Error("Verification not found");
     const value = { ...existing, ...update };

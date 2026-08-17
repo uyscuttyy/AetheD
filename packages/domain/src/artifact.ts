@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
-export type ArtifactReference = { provider: "local"; reference: string; contentHash: string };
+export type ArtifactReference = { provider: "local" | "0g"; reference: string; contentHash: string; transactionHash?: string };
 export interface ArtifactStore {
   put(key: string, content: Uint8Array): Promise<ArtifactReference>;
   get(reference: string): Promise<Uint8Array>;

@@ -4,6 +4,7 @@ import type { EvidenceKind } from "../../domain/src/verification.js";
 import type { VerificationProfile } from "../../domain/src/verification.js";
 import type { AetheScoreResult } from "../../domain/src/scoring.js";
 import type { DataPassport } from "../../domain/src/passport.js";
+import type { RegistryPublication } from "../../domain/src/registry.js";
 
 const datasetToDb: Record<DatasetStatus, DbDatasetStatus> = { draft: "DRAFT", verifying: "VERIFYING", published: "PUBLISHED", failed: "FAILED" };
 const datasetFromDb: Record<DbDatasetStatus, DatasetStatus> = { DRAFT: "draft", VERIFYING: "verifying", PUBLISHED: "published", FAILED: "failed" };
@@ -32,6 +33,7 @@ const mapVerification = (row: VerificationRow): VerificationRecord => ({
   ...(row.profile ? { profile: row.profile as VerificationProfile } : {}),
   ...(row.score ? { score: row.score as AetheScoreResult } : {}),
   ...(row.passport ? { passport: row.passport.payload as DataPassport } : {}),
+  ...(row.registryPublication ? { registryPublication: row.registryPublication as RegistryPublication } : {}),
   ...(row.error ? { error: row.error } : {}), createdAt: row.createdAt.toISOString(),
   ...(row.completedAt ? { completedAt: row.completedAt.toISOString() } : {})
 });
@@ -62,12 +64,13 @@ export class PrismaDatasetRepository implements DatasetRepository {
     return mapVersion(await this.prisma.datasetVersion.update({ where: { id }, data: update }));
   }
 
-  async updateVerification(id: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "error" | "completedAt">>): Promise<VerificationRecord> {
+  async updateVerification(id: string, update: Partial<Pick<VerificationRecord, "status" | "profile" | "score" | "passport" | "registryPublication" | "error" | "completedAt">>): Promise<VerificationRecord> {
     await this.prisma.$transaction(async (tx) => {
       await tx.verification.update({ where: { id }, data: {
         ...(update.status ? { status: verificationToDb[update.status] } : {}),
         ...(update.profile ? { profile: asJson(update.profile) } : {}),
         ...(update.score ? { score: asJson(update.score), totalScore: update.score.score, confidence: update.score.confidence, limitations: asJson(update.score.limitations) } : {}),
+        ...(update.registryPublication ? { registryPublication: asJson(update.registryPublication) } : {}),
         ...(update.error !== undefined ? { error: update.error } : {}),
         ...(update.completedAt ? { completedAt: new Date(update.completedAt) } : {})
       } });

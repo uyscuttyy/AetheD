@@ -63,9 +63,43 @@ model DatasetVersion {
   dataset               Dataset             @relation(fields: [datasetId], references: [id], onDelete: Cascade)
   verifications         Verification[]
   artifactReferences    ArtifactReference[]
+  purchases             Purchase[]
+  accessGrants          AccessGrant[]
 
   @@unique([datasetId, version])
   @@index([datasetId, createdAt])
+}
+
+model Purchase {
+  id               String         @id @default(cuid())
+  datasetVersionId String
+  chainId          Int
+  contractAddress  String
+  transactionHash  String         @unique
+  blockNumber      BigInt
+  versionKey       String
+  buyerAddress     String
+  sellerAddress    String
+  priceWei         String
+  createdAt        DateTime       @default(now())
+  datasetVersion   DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+  accessGrant      AccessGrant?
+
+  @@index([datasetVersionId, buyerAddress])
+  @@index([versionKey, buyerAddress])
+}
+
+model AccessGrant {
+  id               String         @id @default(cuid())
+  purchaseId       String         @unique
+  datasetVersionId String
+  buyerAddress     String
+  createdAt        DateTime       @default(now())
+  purchase         Purchase       @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  datasetVersion   DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([datasetVersionId, buyerAddress])
+  @@index([buyerAddress, createdAt])
 }
 
 model Verification {
@@ -79,6 +113,7 @@ model Verification {
   score             Json?
   limitations       Json?
   error             String?
+  registryPublication Json?
   createdAt         DateTime          @default(now())
   completedAt       DateTime?
   datasetVersion    DatasetVersion    @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)

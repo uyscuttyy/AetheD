@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { AetheScore } from "../../../components/aethe-score";
 import { DataPassport } from "../../../components/data-passport";
-import { getDataset } from "../../../lib/demo-data";
+import { fetchDataset } from "../../../lib/api-client";
 
 export default async function DatasetPage({ params }: { params: Promise<{ id: string }> }) {
-  const dataset = getDataset((await params).id); if (!dataset) notFound();
+  const { dataset } = await fetchDataset((await params).id); if (!dataset) notFound();
   return <section className="detail shell"><div className="detailTop"><div><span className="sectionIndex">{dataset.category.toUpperCase()} / SYNTHETIC DEMO</span><h1>{dataset.name}</h1><p>{dataset.description}</p><div className="tags">{dataset.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div><div className="buyBox"><AetheScore score={dataset.score} confidence={dataset.confidence}/><hr/><span>VERSION {dataset.version}</span><strong>${dataset.price.toFixed(2)}</strong><button className="darkButton">Buy Dataset</button><small>Wallet transaction is not connected yet.</small></div></div><div className="detailGrid"><div><section className="contentSection"><span className="sectionIndex">VERIFICATION</span><h2>Evidence, not decoration.</h2><div className="checks"><span>✓ Integrity hash generated</span><span>✓ Duplicate analysis complete</span><span>✓ Schema quality analyzed</span><span className="pending">○ Provenance has limited evidence</span><span className="pending">○ 0G Storage integration pending</span></div></section><section className="contentSection"><span className="sectionIndex">QUALITY BREAKDOWN</span><AetheScore score={dataset.score} confidence={dataset.confidence} dimensions={dataset.dimensions}/></section><section className="contentSection info"><span className="sectionIndex">DATASET INFORMATION</span>{[["Records", dataset.records.toLocaleString()], ["Format", dataset.format], ["Size", dataset.size], ["Updated", dataset.freshness], ["License", dataset.license], ["Category", dataset.category]].map(([key,value]) => <div key={key}><span>{key}</span><b>{value}</b></div>)}</section></div><DataPassport dataset={dataset}/></div></section>;
 }

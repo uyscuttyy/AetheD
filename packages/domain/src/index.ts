@@ -9,3 +9,5 @@ export * from "./repository.js";
 export * from "./jobs.js";
 export * from "./service.js";
 export * from "./api.js";
+export * from "./registry.js";
+export * from "./commerce.js";

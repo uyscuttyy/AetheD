@@ -2,11 +2,19 @@
 
 ## Where We Are
 
-AetheD is a functioning local prototype at commit `785f61a`. The verification domain is tested, the framework-neutral API handlers are tested, and the Next.js marketplace pages compile and run locally. The web UI uses synthetic demo data and is not yet connected to the API or a wallet.
+AetheD is a functioning prototype with deterministic verification, a Next.js marketplace demo, PostgreSQL/BullMQ runtime infrastructure, a 0G Storage adapter, and a deployed Galileo registry/purchase contract. The web UI still uses synthetic fallback data and is not connected to a wallet.
 
 The product thesis remains: **AetheD is the trust layer for machine-readable data, turning raw datasets into verified, scored, and programmable assets for AI agents.** The current implementation proves the verification and presentation concepts locally; it does not yet prove decentralized storage or commerce.
 
 ## Recently Completed
+
+- Researched the current official 0G Builder Hub and SDK repository.
+- Installed `@0gfoundation/0g-storage-ts-sdk@1.2.11` and `ethers@6.13.1`.
+- Added a server-only Galileo Storage adapter for Merkle-root generation, signed upload, transaction/root-hash validation, and proof-enabled retrieval.
+- Wired exact dataset uploads into verification so the 0G root hash enters the Data Passport.
+- Deployed `AetheDRegistry` to Galileo chain `16602` at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`.
+- Added a server-side registry publisher that idempotently registers dataset/version hashes and persists chain keys and transaction receipts.
+- Enforced signer/seller equality for chain-enabled submissions.
 
 - Added bounded CSV/JSON/JSONL parsing.
 - Added deterministic profiling for missingness, exact duplicates, schema consistency, type consistency, and integrity hashes.
@@ -20,11 +28,17 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 - Added `/sell`, local Next API routes for submission/status, and route-level adapter tests.
 - Added a standalone Node HTTP adapter, `npm run api:dev`, and an ephemeral server test.
 - Added a validated Prisma schema, generated client, and local PostgreSQL/Redis Compose services.
+- Added explicit runtime persistence selection, production rejection of memory persistence, validated API settings, dependency-injected server tests, and graceful database shutdown.
+- Added BullMQ/Redis verification jobs, filesystem-backed durable verification inputs, a separate worker process, retries, and restart-focused tests.
+- Added bounded multipart upload streaming with private staging files, filename sanitization, and format/size enforcement.
+- Added API-backed marketplace/detail reads and production seller upload/status proxying through `AETHED_API_URL`.
 - Installed npm dependencies and fixed strict TypeScript errors.
 
 ## Currently Working
 
-- `npm test`: 9 test files, 22 tests passing.
+- Add browser wallet purchase, receipt reconciliation, and version-specific access grants.
+- Purchase receipt reconciliation and signed exact-version access lookup are implemented in the API; browser wallet transaction preparation and encrypted delivery remain next.
+- `npm test`: 10 test files and 25 tests passing; one PostgreSQL integration test is skipped without `DATABASE_URL`.
 - `npm run typecheck`: passing.
 - Next.js development server starts with `npm run dev -- --hostname 127.0.0.1 --port 3000`.
 - Human demo routes:
@@ -38,15 +52,14 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 
 ## Incomplete
 
-- `apps/api` has no server entry point or route adapter.
-- No persistent database or durable queue.
-- Prisma is not yet migrated or wired into the runtime repository.
-- Standalone API state resets whenever its process restarts.
-- Seller upload is local/in-memory and submits the complete file as JSON; it is not production streaming or durable.
-- Web pages consume `apps/web/lib/demo-data.ts`, not API responses.
+- PostgreSQL can persist dataset/version/verification records when explicitly configured.
+- Production requires a persistent shared `AETHED_ARTIFACT_ROOT`; local container disk alone is not sufficient for multiple worker replicas.
+- Verification parsing still materializes the bounded staged file in worker memory after upload; truly large datasets need incremental parser/profiler stages.
+- Web pages fall back to labeled demo data if `AETHED_API_URL` is missing or unavailable.
 - Marketplace search/filter controls are presentational.
 - Wallet connection, authentication, purchases, payments, access grants, and dashboards are absent.
-- No 0G Storage adapter or 0G Chain contract exists.
+- Browser wallet connection and purchase submission are absent. Backend receipt reconciliation and signed access grants are present, but 0G artifacts are not yet encrypted per buyer.
+- The standard Galileo Storage indexer returned HTTP 503 during the smoke run; the successful proof used the responsive turbo indexer endpoint.
 - No mainnet contract address or Explorer activity exists for the Buildathon submission.
 - No real 0G Compute integration exists.
 - No browser/e2e tests, deployment configuration, or production observability.
@@ -73,15 +86,7 @@ The product thesis remains: **AetheD is the trust layer for machine-readable dat
 
 ## Highest-Priority Next Work
 
-The persistence foundation is now implemented:
-
-1. Mount `PrismaDatasetRepository` behind a runtime repository factory and move the standalone API off in-memory state.
-2. Add Redis/BullMQ or equivalent durable job processing.
-3. Add a Fastify HTTP adapter under `/api/v1` with request validation and OpenAPI.
-4. Replace whole-file JSON submission with multipart/streaming limits and durable verification progress.
-5. Wire marketplace and detail pages to API data.
-
-After that, integrate 0G Storage and deploy the dataset registry/purchase contract before adding wallet purchase/access behavior.
+Connect the dataset detail page to a browser wallet, prepare the exact `purchase(versionKey)` transaction, submit its receipt for reconciliation, and replace raw storage-root access with encrypted or mediated delivery.
 
 ## How to Run
 
@@ -116,5 +121,5 @@ npm run lint
 
 The Buildathon Wave 3 submission requires a public repository, meaningful commits, a 0G mainnet contract address, Explorer activity, at least one real 0G component, a short demo video, documentation, and a required X post. None of the mainnet/0G proof requirements are satisfied yet.
 
-**Last Updated:** 2026-08-15  
-**Last Audit:** 2026-08-15, full audit against commit `785f61a`; seller flow and HTTP adapter added afterward in the working tree.
+**Last Updated:** 2026-08-17
+**Last Audit:** 2026-08-17, live Galileo upload/retrieval and registry publication completed; public receipt saved under `docs/`.

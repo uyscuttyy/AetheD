@@ -2,11 +2,15 @@
 
 ## Persistence Update
 
-The repository now contains a validated PostgreSQL schema and applied initial migration in `prisma/`, local PostgreSQL/Redis services in `docker-compose.yml`, and a tested Prisma repository adapter. Runtime repositories and queues remain in memory by default.
+The artifact boundary can now select local storage for development or official 0G Storage for production. Production configuration requires `ARTIFACT_STORE_PROVIDER=0g`. The worker uploads exact dataset bytes, verifies the returned root hash against the SDK Merkle root, and stores that root hash in the Data Passport.
+
+The worker can also publish verified dataset/version integrity records to the deployed Galileo registry at `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`. Registry publication is enabled only when `OG_CONTRACT_ADDRESS` is configured, requires the submitted seller to match the configured signer, and persists dataset/version keys and transaction hashes on the verification record.
+
+The repository contains PostgreSQL persistence, BullMQ/Redis jobs, filesystem-backed durable verification inputs, bounded multipart uploads, a separate worker process, and API-backed web read paths. Production configuration rejects memory persistence.
 
 ## System Overview
 
-AetheD currently consists of a static/demo Next.js frontend and a tested framework-neutral TypeScript domain layer. The frontend and domain layer are not connected at runtime. All repository and queue state is process-local, and artifacts use local filesystem storage.
+AetheD currently consists of a Next.js frontend, a framework-neutral TypeScript domain layer, a standalone Node API, and a separate verification worker. The frontend uses the API when `AETHED_API_URL` is configured and otherwise exposes a labeled demo fallback.
 
 ```text
 CURRENT
@@ -54,7 +58,7 @@ Parser -> Profile -> AetheScore -> Data Passport
 
 ### Domain and Backend Logic
 
-There is no running backend application. `apps/api` contains only a README. Backend behavior currently exists as importable classes/functions under `packages/domain/src`.
+`apps/api/server.ts` is a standalone Node HTTP adapter. Backend behavior remains framework-neutral under `packages/domain/src`, and runtime persistence construction lives in `packages/infrastructure/src/runtime.ts`.
 
 - Parsing: `dataset.ts`, `parser.ts`.
 - Verification: `verification.ts`.
@@ -87,14 +91,14 @@ SubmitDatasetRequest
 ### Storage and Database
 
 - Database schema: `prisma/schema.prisma`; migration: `prisma/migrations/20260815190000_initial/migration.sql`.
-- Adapter: `packages/infrastructure/src/prisma-dataset-repository.ts`; it is tested against PostgreSQL but not selected by the API runtime yet.
+- Adapter: `packages/infrastructure/src/prisma-dataset-repository.ts`; the configured standalone API selects it when `PERSISTENCE_PROVIDER=postgresql`.
 - Config placeholders: PostgreSQL and Redis URLs exist in `.env.example`.
 - Artifacts: `LocalArtifactStore` writes immutable files under a configured directory.
 - Dataset files: not durably persisted by the service as a separate artifact.
 
 ### API
 
-- `AetheDApi` is not an HTTP server.
+- `AetheDApi` is framework-neutral and is mounted by the standalone Node server.
 - A local Next adapter exists at `apps/web/app/api/v1`; it is a development bridge and immediately processes verification in the request lifecycle.
 - Intended mappings are documented in `docs/agent-api.md`.
 - Search supports text, exact category, minimum score, exact format, and bounded result limit.
@@ -106,7 +110,12 @@ None. `sellerAddress` is accepted as unverified request text. There is no nonce 
 
 ### Blockchain and 0G
 
-No smart contracts, chain clients, deployed addresses, 0G Storage client, or 0G Compute client exist. UI labels integration as pending. `.env.example` contains placeholders only.
+- `ZeroGStorageArtifactStore` uploads and proof-downloads artifacts through the official 0G Storage SDK on Galileo.
+- `GalileoRegistryPublisher` registers dataset and exact version hashes after successful verification/storage.
+- Deployed Galileo contract: `0xf13ad20A3e912978Ab683b95AAdD9832d008ae0c`, chain ID `16602`.
+- Registry receipts are stored in `Verification.registryPublication`; the schema addition is in migration `20260817120000_registry_publication`.
+- A documented upload/retrieval plus registry-write smoke flow completed on 2026-08-17; the public receipt is `docs/galileo-smoke-2026-08-17.json`. No 0G Compute client exists.
+- Browser wallet purchase and access reconciliation remain unimplemented.
 
 ### Tests
 
@@ -117,7 +126,7 @@ No smart contracts, chain clients, deployed addresses, 0G Storage client, or 0G 
 
 ### Deployment
 
-No production deployment configuration exists. The web demo runs locally through `npm run dev`. There is no container, infrastructure-as-code, CI workflow, hosted API, database, worker, or contract deployment script.
+No production deployment configuration exists. The web demo runs locally through `npm run dev`. Local database/worker services and a Galileo testnet contract exist, but there is no infrastructure-as-code, CI workflow, hosted API, mainnet deployment, or maintained deployment script/receipt artifact.
 
 ## Planned Architecture
 
